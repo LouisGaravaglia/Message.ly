@@ -1,3 +1,11 @@
+const Router = require("express").Router;
+const User = require("../models/user");
+const {ensureLoggedIn, ensureCorrectUser} = require("../middleware/auth");
+const Message = require("../models/message");
+
+const router = new Router();
+
+
 /** GET /:id - get detail of message.
  *
  * => {message: {id,
@@ -10,7 +18,16 @@
  * Make sure that the currently-logged-in users is either the to or from user.
  *
  **/
+router.get("/:id", ensureCorrectUser, async function (req, res, next) {
+  try {
+    let message = await Message.get(req.params.id);
+    return res.json({message});
+  }
 
+  catch (err) {
+    return next(err);
+  }
+});
 
 /** POST / - post message.
  *
@@ -18,6 +35,16 @@
  *   {message: {id, from_username, to_username, body, sent_at}}
  *
  **/
+router.post("/", ensureCorrectUser, async function (req, res, next) {
+  try {
+    let message = await Message.create(req.body.from_username, req.body.to_username, req.body.body);
+    return res.json({message});
+  }
+
+  catch (err) {
+    return next(err);
+  }
+});
 
 
 /** POST/:id/read - mark message as read:
@@ -27,4 +54,13 @@
  * Make sure that the only the intended recipient can mark as read.
  *
  **/
+router.post("/:id/read", ensureCorrectUser, async function (req, res, next) {
+  try {
+    let message = await Message.markRead(req.params.id);
+    return res.json({message});
+  }
 
+  catch (err) {
+    return next(err);
+  }
+});
